@@ -21,18 +21,18 @@ This scoring system calculates a comprehensive score for Web3 users, taking into
 ### Transaction-based Scoring Formulae:
 
 - Influence Factor (IF): $A \times (1 - e^{-k \times |S_{\text{current}} - S_{\text{other}}|})$
-- Frequency Modifier (FM): $B \times (1 + e^{-C \times (n - 1)})$
+- Frequency Modifier (FM): $\dfrac{B} {(1 + e^{-C \times (n_{transactions} - 1)})}$
 - Transaction Score: Varies based on the transaction type (sending or receiving) and the score difference between interacting addresses.
 
 #### Holdings-based Scoring Formulae:
 
-- Ethereum Balance Score: $(\dfrac{balance} {balance_{max}}) \times 300$
+- Ethereum Balance Score: $(\dfrac{balance} {1000000}) \times 300$
 
-- Ethereum NFTs Held Score: $(\dfrac{n_{nfts}}{n_{max}}) \times 300$
+- Ethereum NFTs Held Score: $(\dfrac{nfts}{20}) \times 300$
 
-- Ethereum Activity Score: $(\dfrac{age} {age_{max}}) \times 150$
+- Ethereum Activity Score: $(\dfrac{age} {10}) \times 150$
 
-- ERC20 Tokens Score: $(\dfrac{balance_{erc20}}{balance_{max}}) \times 100$
+- ERC20 Tokens Score: $(\dfrac{balance_{erc20}}{10000}) \times 100$
 
 ### LSTM Model for Liquidation Risk Prediction
 
