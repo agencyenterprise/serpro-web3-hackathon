@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "@aave/contract-helpers": "^1.21.1",
+    "@aave/math-utils": "^1.21.1",
+    "@bgd-labs/aave-address-book": "^2.12.0",
+    "circomlib-ml": "^2.0.1",
+    "dayjs": "^1.11.10",
+    "ethers": "^5.7.2"
+  },
+  "name": "serpro-web3",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

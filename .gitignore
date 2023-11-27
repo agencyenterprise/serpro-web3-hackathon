@@ -1,0 +1,15 @@
+LSTM.ipynb
+package-lock.json
+sample.json
+summary.txt
+user.json
+X.npy
+y.npy
+model.py
+zkscore_results_real
+zkmodel/keras2circom/
+new_model.py
+node_modules
+.ipynb_checkpoints
+zkmodel/aave-v2-health-factor-complete.csv
+zkscore_lstm.py
