@@ -5,7 +5,8 @@
     "@bgd-labs/aave-address-book": "^2.12.0",
     "circomlib-ml": "^2.0.1",
     "dayjs": "^1.11.10",
-    "ethers": "^5.7.2"
+    "ethers": "^5.7.2",
+    "snarkjs": "^0.7.2"
   },
   "name": "serpro-web3",
   "version": "1.0.0",
