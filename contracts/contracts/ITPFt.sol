@@ -9,7 +9,7 @@ interface ITPFt {
     }
 
   function createTPFt ( TPFtData memory tpftData ) external returns ( uint256 );
-  function mint ( address receiverAddress, TPFtData memory tpftData, uint256 tpftAmount ) external;
+  function mint ( address receiverAddress, uint256 tpfDataId, uint256 tpftAmount ) external;
 
   // function allowAuctionPlacement ( address member ) external;
   // function allowDirectPlacement ( address member ) external;
