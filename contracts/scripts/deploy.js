@@ -13,7 +13,7 @@ async function main() {
   await tpfContract.waitForDeployment();
 
   console.log(
-    `TPFt deployed to ${lock.target}`
+    `TPFt deployed to ${tpfContract.target}`
   );
 }
 

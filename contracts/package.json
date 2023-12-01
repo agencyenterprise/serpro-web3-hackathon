@@ -3,7 +3,7 @@
   "scripts": {
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
-    "deploy": "yarn compile && npx hardhat run --network mumbai scripts/deploy.ts"
+    "deploy": "yarn compile && npx hardhat run --network mumbai scripts/deploy.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
