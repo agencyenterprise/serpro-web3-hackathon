@@ -3,17 +3,15 @@ pragma solidity ^0.8.19;
 
 import "./ITPFt.sol";
 
-
 contract TPFt is ITPFt {
     struct TPFtUserData {
         uint256 tpfDataId;
         uint256 tpftAmount;
     }
 
-    mapping(address => TPFtUserData[]) name;
+    mapping(address => TPFtUserData[]) userTpftData;
     mapping(uint256 => TPFtData) tpfDatas;
 
-    //counter with next available id
     uint256 nextId = 0;
 
     function mint(
@@ -21,7 +19,7 @@ contract TPFt is ITPFt {
         uint256 tpfDataId,
         uint256 tpftAmount
     ) external {
-        name[receiverAddress].push(TPFtUserData(tpfDataId, tpftAmount));
+        userTpftData[receiverAddress].push(TPFtUserData(tpfDataId, tpftAmount));
     }
 
     function createTPFt(TPFtData memory tpftData) external returns (uint256) {
@@ -29,4 +27,17 @@ contract TPFt is ITPFt {
         nextId++;
         return nextId;
     }
+
+    function getTPFtData(uint256 tpfDataId) external view returns (TPFtData memory) {
+        return tpfDatas[tpfDataId];
+    }
+
+    function getUserTPFtData(address userAddress)
+        external
+        view
+        returns (TPFtUserData[] memory)
+    {
+        return userTpftData[userAddress];
+    }
+    
 }
