@@ -1,0 +1,8 @@
+from fastapi import APIRouter
+from app.server.api.router import get_router
+from app.server.api.loan.view import router
+
+
+router = APIRouter(prefix="")
+
+router.include_router(router, prefix="/aave", tags=["aave"])

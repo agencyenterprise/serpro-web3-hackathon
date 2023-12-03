@@ -15,6 +15,14 @@ imbalanced-learn = "^0.11.0"
 threadpoolctl = "3.1.0"
 keras-tuner = "^1.4.6"
 web3 = "^6.11.3"
+uvicorn = "^0.24.0.post1"
+fastapi = "^0.104.1"
+sqlalchemy = "^2.0.23"
+httpx = "^0.25.2"
+pydantic-settings = "^2.1.0"
+alembic = "^1.13.0"
+asyncpg = "^0.29.0"
+psycopg2 = "^2.9.9"
 
 
 [tool.poetry.group.dev.dependencies]

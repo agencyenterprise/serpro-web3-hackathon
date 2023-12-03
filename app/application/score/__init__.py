@@ -1,39 +1,20 @@
 import json
+import time
+from typing import Optional
 import pandas as pd
 from datetime import timedelta
 import math
 import numpy as np
 from web3 import Web3
+from app.application.model.score import ScoreModel
+from app.config import settings
+import asyncio
+from app.application.model.db import session
 
 # Replace with your Alchemy API key
-alchemy_api_key = "YOUR_ALCHEMY_API_KEY"
+alchemy_api_key = settings.ALCHEMY_API_KEY
 
 w3 = Web3(Web3.HTTPProvider(f"https://eth-mainnet.alchemyapi.io/v2/{alchemy_api_key}"))
-
-user_address = "0xUserAddress"  # Replace with the user's Ethereum address
-nft_contract_address = (
-    "0xNFTContractAddress"  # Replace with the NFT contract address you want to check
-)
-
-# Sample data: replace with real transaction data
-data = {
-    "timestamp": pd.date_range(start="2021-01-01", periods=10, freq="30T"),
-    "is_sender": [True, False, True, False, True, False, True, False, True, False],
-    "other_address_score": [
-        200,
-        500,
-        300,
-        600,
-        800,
-        100,
-        400,
-        700,
-        900,
-        200,
-    ],  # Other party's score
-}
-transactions_df = pd.DataFrame(data)
-transactions_df["timestamp"] = pd.to_datetime(transactions_df["timestamp"])
 
 
 def payment_tx_type(transaction):
@@ -46,7 +27,7 @@ def calculate_num_transactions(transactions, current_index, window=timedelta(hou
     current_time = transactions.iloc[current_index]["timestamp"]
     return transactions[
         (transactions["timestamp"] >= current_time - window)
-        & (transactions["timestamp"] < current_time)
+        & (transactions["timestamp"] <= current_time)
     ].shape[0]
 
 
@@ -70,6 +51,7 @@ def transaction_score(
         return min(IF * (1 + num_transactions * freq_modifier), 150)
     elif tx_type == "receiver" and S_current > S_other:
         return max(-IF * FM * num_transactions, -150)
+    print("No score change")
     return 0
 
 
@@ -82,6 +64,7 @@ def compute_transaction_based_score(transactions_df, user_score=400):
         score_change = transaction_score(
             user_score, tx_type, other_address_score, num_transactions
         )
+        print(f"Score change for transaction {index}: {score_change}")
         score += score_change
     return max(min(score, 150), -150)
 
@@ -120,12 +103,12 @@ def compute_holdings_based_score(
 
 
 def compute_overall_score(
-    eth_balance,
-    nfts_held,
-    account_age,
-    erc20_tokens,
-    transactions_df,
-    holdings_score=0,
+    address: str,
+    eth_balance: float,
+    nfts_held: int,
+    account_age: int,
+    erc20_tokens: int,
+    transactions_df: pd.DataFrame,
 ):
     holdings_score = compute_holdings_based_score(
         eth_balance,
@@ -137,30 +120,27 @@ def compute_overall_score(
     transaction_score = compute_transaction_based_score(transactions_df, holdings_score)
     print(f"Transaction Score = {transaction_score}")
     final_score = holdings_score + transaction_score
+    asyncio.run(save_score_in_db(address, final_score))
     return final_score
 
 
-def count_nfts():
-    try:
-        # Load the ABI of the NFT contract
-        with open("NFTContractABI.json", "r") as abi_file:
-            nft_contract_abi = json.load(abi_file)
+# def count_nfts():
+#     try:
+#         # Load the ABI of the NFT contract
+#         with open("NFTContractABI.json", "r") as abi_file:
+#             nft_contract_abi = json.load(abi_file)
 
-        # Create a contract instance
-        nft_contract = w3.eth.contract(
-            address=nft_contract_address, abi=nft_contract_abi
-        )
+#         # Create a contract instance
+#         nft_contract = w3.eth.contract(
+#             address=settings.NFT_CONTRACT_ADDRESS, abi=nft_contract_abi
+#         )
 
-        # Call the balanceOf function to count NFTs owned by the user
-        nft_count = nft_contract.functions.balanceOf(user_address).call()
+#         # Call the balanceOf function to count NFTs owned by the user
+#         nft_count = nft_contract.functions.balanceOf(user_address).call()
 
-        print(f"Number of NFTs owned by {user_address}: {nft_count}")
-    except Exception as e:
-        print(f"Error counting NFTs: {e}")
-
-
-def wei_to_eth(wei):
-    return wei / 1e18
+#         print(f"Number of NFTs owned by {user_address}: {nft_count}")
+#     except Exception as e:
+#         print(f"Error counting NFTs: {e}")
 
 
 def getTransactions(start, end, address):
@@ -173,6 +153,7 @@ def getTransactions(start, end, address):
         "other_address",
         "block_number",
         "user_balance",
+        "other_address_balance",
     ]
     transactions = pd.DataFrame([], columns=columns)
     for x in range(start, end):
@@ -192,13 +173,19 @@ def getTransactions(start, end, address):
                             "is_sender": transaction["from"] == address,
                             "other_address": other_address,
                             "block_number": x,
-                            "user_balance": w3.from_wei(
-                                w3.eth.get_balance(address, block_identifier=x)
+                            "user_balance": float(
+                                w3.from_wei(
+                                    w3.eth.get_balance(address, block_identifier=x),
+                                    "ether",
+                                )
                             ),
-                            "other_address_balance": w3.from_wei(
-                                w3.eth.get_balance(
-                                    other_address,
-                                    block_identifier=x,
+                            "other_address_balance": float(
+                                w3.from_wei(
+                                    w3.eth.get_balance(
+                                        other_address,
+                                        block_identifier=x,
+                                    ),
+                                    "ether",
                                 )
                             ),
                         }
@@ -214,37 +201,48 @@ def getTransactions(start, end, address):
     return transactions
 
 
-def get_score_in_db(address):
-    return None
+async def get_score_in_db(address):
+    async with session() as db_session:
+        score: Optional[ScoreModel] = (
+            db_session.query(ScoreModel).filter(ScoreModel.address == address).first()
+        )
+        if score:
+            return score.score
+        return None
 
 
-def extract_payment_data(block_start, block_end, user_address):
+async def save_score_in_db(address, score):
+    async with session() as db_session:
+        score_model = ScoreModel(address=address, score=score)
+        db_session.add(score_model)
+        db_session.commit()
+        return score_model
+
+
+def extract_payment_data(user_address):
     try:
         # Fetch transactions sent to the user's address
+        block_end = w3.eth.get_block("latest")["number"]
+        block_start = block_end - 100
         transactions = getTransactions(block_start, block_end, user_address)
+        # breakpoint()
         other_address_scores = []
         for _, row in transactions.iterrows():
             block_end = row["block_number"]
             other_address = row["other_address"]
-            if other_address_score := get_score_in_db(other_address):
+            if other_address_score := asyncio.run(get_score_in_db(other_address)):
                 other_transactions = getTransactions(
                     block_start, block_end, other_address
                 )
             else:
-                other_address_score = row["other_address_balance"]
+                other_address_score = (
+                    row["other_address_balance"]
+                    if row["other_address_balance"] > 0
+                    else 100
+                )
             other_address_scores.append(other_address_score)
         transactions["other_address_score"] = other_address_scores
+        transactions["timestamp"] = pd.to_datetime(transactions["timestamp"])
         return transactions
     except Exception as e:
         print(f"Error fetching transactions: {e}")
-
-
-final_score = compute_overall_score(
-    1e6,
-    20,
-    10,
-    10000,
-    transactions_df,
-    holdings_score=400,
-)
-print(f"Final Score: {final_score}")
