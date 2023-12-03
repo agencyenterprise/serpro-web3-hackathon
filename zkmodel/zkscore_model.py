@@ -9,7 +9,6 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_recall_fscore_support
 
 
-# 26
 def create_optimized_model(num_time_series_features):
     # Input for time-series features
     time_series_input = Input(shape=(None, num_time_series_features))
