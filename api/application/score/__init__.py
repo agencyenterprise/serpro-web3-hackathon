@@ -1,10 +1,14 @@
 import json
+import logging
+from pdb import run
 import time
 from typing import Optional
+from fastapi.concurrency import run_in_threadpool
 import pandas as pd
 from datetime import timedelta
 import math
 import numpy as np
+from sqlalchemy import select
 from web3 import Web3
 from api.application.model.score import ScoreModel
 from api.config import settings
@@ -55,14 +59,22 @@ def transaction_score(
     return 0
 
 
-def compute_transaction_based_score(transactions_df, user_score=400):
+async def compute_transaction_based_score(
+    transactions_df: pd.DataFrame, user_score=400
+):
     score = 0
     for index, transaction in transactions_df.iterrows():
         tx_type = payment_tx_type(transaction)
-        num_transactions = calculate_num_transactions(transactions_df, index)
+        num_transactions = await run_in_threadpool(
+            calculate_num_transactions, transactions_df, index
+        )
         other_address_score = transaction["other_address_score"]
-        score_change = transaction_score(
-            user_score, tx_type, other_address_score, num_transactions
+        score_change = await run_in_threadpool(
+            transaction_score,
+            user_score,
+            tx_type,
+            other_address_score,
+            num_transactions,
         )
         print(f"Score change for transaction {index}: {score_change}")
         score += score_change
@@ -85,19 +97,23 @@ def calculate_erc20_tokens_score(erc20_tokens, max_erc20_tokens=10000):
     return min(erc20_tokens / max_erc20_tokens, 1) * 100
 
 
-def compute_holdings_based_score(
+async def compute_holdings_based_score(
     eth_balance,
     nfts_held,
     account_age,
     erc20_tokens,
 ):
-    eth_balance_score = calculate_ethereum_balance_score(eth_balance)
+    eth_balance_score = await run_in_threadpool(
+        calculate_ethereum_balance_score, eth_balance
+    )
     print(f"ETH Balance Score = {eth_balance_score}")
-    nfts_score = calculate_ethereum_nfts_score(nfts_held)
+    nfts_score = await run_in_threadpool(calculate_ethereum_nfts_score, nfts_held)
     print(f"NFTs Score = {nfts_score}")
-    activity_score = calculate_ethereum_activity_score(account_age)
+    activity_score = await run_in_threadpool(
+        calculate_ethereum_activity_score, account_age
+    )
     print(f"Activity Score = {activity_score}")
-    erc20_score = calculate_erc20_tokens_score(erc20_tokens)
+    erc20_score = await run_in_threadpool(calculate_erc20_tokens_score, erc20_tokens)
     print(f"ERC20 Score = {erc20_score}")
     return eth_balance_score + nfts_score + activity_score + erc20_score
 
@@ -203,9 +219,10 @@ def getTransactions(start, end, address):
 
 async def get_score_in_db(address):
     async with session() as db_session:
-        score: Optional[ScoreModel] = (
-            db_session.query(ScoreModel).filter(ScoreModel.address == address).first()
+        score: Optional[ScoreModel] = await db_session.scalar(
+            select(ScoreModel).filter(ScoreModel.address == address).limit(1)
         )
+
         if score:
             return score.score
         return None
@@ -219,21 +236,23 @@ async def save_score_in_db(address, score):
         return score_model
 
 
-def extract_payment_data(user_address):
+async def extract_payment_data(user_address):
     try:
         # Fetch transactions sent to the user's address
-        block_end = w3.eth.get_block("latest")["number"]
+        block_end = await run_in_threadpool(w3.eth.get_block, "latest")
+        block_end = block_end["number"]
         block_start = block_end - 100
-        transactions = getTransactions(block_start, block_end, user_address)
-        # breakpoint()
+        transactions = await run_in_threadpool(
+            getTransactions, block_start, block_end, user_address
+        )
         other_address_scores = []
         for _, row in transactions.iterrows():
             block_end = row["block_number"]
             other_address = row["other_address"]
-            if other_address_score := asyncio.run(get_score_in_db(other_address)):
-                other_transactions = getTransactions(
-                    block_start, block_end, other_address
-                )
+            other_address_score = await get_score_in_db(other_address)
+
+            if other_address_score:
+                logging.info(f"Found score for {other_address}: {other_address_score}")
             else:
                 other_address_score = (
                     row["other_address_balance"]
