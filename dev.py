@@ -2,7 +2,7 @@ import uvicorn
 
 if __name__ == "__main__":
     uvicorn.run(
-        "app.server.main:app",
+        "api.server.main:app",
         host="localhost",
         reload=True,
     )
