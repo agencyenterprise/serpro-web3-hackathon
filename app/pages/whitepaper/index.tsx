@@ -3,12 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import ctaStyle from "@/components/cta.module.css";
 
-import {
-  useAddress,
-  useContract,
-  ConnectWallet,
-  useContractWrite,
-} from "@thirdweb-dev/react";
+import { ConnectWallet } from "@thirdweb-dev/react";
 import { Inter } from "next/font/google";
 import Score from "@/components/score";
 import WhitePaper from "@/components/whitepaper";
@@ -36,24 +31,7 @@ function IconBank(props: any) {
 
 const inter = Inter({ subsets: ["latin"] });
 
-export default function Home() {
-  function WalletBtn() {
-    return (
-      <>
-        <div className="self-end">
-          <ConnectWallet
-            theme={"dark"}
-            modalSize={"wide"}
-            dropdownPosition={{
-              side: "bottom",
-              align: "end",
-            }}
-          />
-        </div>
-      </>
-    );
-  }
-
+export default function WhitePaperPage() {
   return (
     <>
       <main
@@ -66,10 +44,10 @@ export default function Home() {
               <span className="sr-only">Score de Crédito e Empréstimo</span>
             </Link>
             <Link
-              href="/whitepaper"
+              href="/"
               className="pl-3 text-xl hover:text-slate-500 font-bold"
             >
-              <p>Como funciona?</p>
+              <p>Calcular score</p>
             </Link>
             <Link
               href={`${process.env.NEXT_PUBLIC_API_URL}/docs`}
@@ -78,9 +56,6 @@ export default function Home() {
             >
               <p>Conheça nossa API</p>
             </Link>
-            <nav className="ml-auto flex gap-4 sm:gap-6">
-              <WalletBtn />
-            </nav>
           </header>
         </section>
         <WhitePaper />

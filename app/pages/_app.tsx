@@ -3,6 +3,7 @@ import type { AppProps } from "next/app";
 
 import { ThirdwebProvider, metamaskWallet } from "@thirdweb-dev/react";
 import { MathJaxContext } from "better-react-mathjax";
+import ToastProvider from "@/components/toast";
 const config = {
   loader: { load: ["input/asciimath", "output/chtml"] },
   asciimath2jax: {
@@ -10,6 +11,7 @@ const config = {
     preview: "none",
   },
 };
+
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
@@ -19,7 +21,9 @@ export default function App({ Component, pageProps }: AppProps) {
           clientId={process.env.NEXT_PUBLIC_CLIENT_ID}
           supportedWallets={[metamaskWallet()]}
         >
-          <Component {...pageProps} />
+          <ToastProvider>
+            <Component {...pageProps} />
+          </ToastProvider>
         </ThirdwebProvider>
       </MathJaxContext>
     </>

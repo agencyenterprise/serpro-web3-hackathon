@@ -2,20 +2,27 @@ import { CardTitle, CardHeader, CardContent, Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
-import { useAddress, useContract, useContractWrite } from "@thirdweb-dev/react";
-type ScoreProps = {
-  score: number;
-  transaction_score: number;
-  balance_score: number;
-  token_score: number;
-  options_score: number;
-  activity_score: number;
-  loan_score: number;
-};
+import {
+  useAddress,
+  useBalance,
+  useContract,
+  useContractWrite,
+} from "@thirdweb-dev/react";
+import { getAddressAge } from "@/utils";
+import { NATIVE_TOKEN_ADDRESS } from "@thirdweb-dev/sdk";
+import { getScore, IScore } from "@/services/api";
+import Loader from "./loader";
+import { toast } from "react-toastify";
 
 export default function Score() {
-  const [score, setScore] = useState<ScoreProps | null>(null);
+  const [scoreLoadingState, setScoreLoadingState] = useState(false);
+  const [score, setScore] = useState<IScore | null>(null);
   const address = useAddress();
+  const success = (msg: string) => toast(msg, { type: "success" });
+  const error = (msg: string) => toast(msg, { type: "error" });
+  const info = (msg: string) => toast(msg, { type: "info" });
+  const { data: balance, isLoading: isBalanceLoading } =
+    useBalance(NATIVE_TOKEN_ADDRESS);
   const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "";
   const { contract } = useContract(contractAddress);
   const { mutateAsync: createTPFtAsync } = useContractWrite(
@@ -31,15 +38,54 @@ export default function Score() {
     });
   }
   async function mint() {
-    await mintAsync({
-      args: [address, 0, 1],
-    });
+    try {
+      setScoreLoadingState(true);
+      await mintAsync({
+        args: [address, 0, 1],
+      });
+      success("Compra realizada com sucesso!");
+      await computeScore();
+    } catch (e) {
+      error("Erro ao realizar a compra! Tente novamente mais tarde");
+      console.log(e);
+    } finally {
+      setScoreLoadingState(false);
+    }
   }
-  async function countNFTs(userAddress: string): Promise<number> {
+  async function countNFTs(): Promise<number> {
     if (!contract) return 0;
-    const nfts = await contract!.call("getUserTPFtData", [userAddress]);
+    const nfts = await contract!.call("getUserTPFtData", [address]);
     if (!Array.isArray(nfts) || !nfts.length) return 0;
     return nfts[0].length;
+  }
+  async function computeScore() {
+    try {
+      setScoreLoadingState(true);
+      info("Calculando o seu score, isso pode levar alguns segundos...");
+      if (!address || !contract || !balance) return;
+      const nftCount = await countNFTs();
+      const accountAge = await getAddressAge(address!);
+      console.log(
+        `address: ${address}, balance: ${
+          balance!.displayValue
+        }, nftCount: ${nftCount}, accountAge: ${accountAge}`
+      );
+
+      const completeScore = await getScore(
+        address,
+        +balance.displayValue,
+        nftCount,
+        accountAge,
+        0
+      );
+      setScore({ ...completeScore });
+      success("Score calculado com sucesso!");
+    } catch (e) {
+      error("Erro ao calcular o Score! Tentar novamente mais tarde");
+      console.log(e);
+    } finally {
+      setScoreLoadingState(false);
+    }
   }
   function Loans() {
     return (
@@ -116,89 +162,66 @@ export default function Score() {
   }
   return (
     <>
-      {!score && (
-        <Button
-          className="text-3xl px-10 py-10"
-          onClick={() =>
-            setScore({
-              score: 600,
-              transaction_score: 100,
-              balance_score: 10,
-              token_score: 10,
-              options_score: 20,
-              activity_score: 10,
-              loan_score: 0.8,
-            })
-          }
-        >
+      {!score && !scoreLoadingState && !!address && (
+        <Button className="text-3xl px-10 py-10" onClick={computeScore}>
           Calcular Score
         </Button>
       )}
-      {!!score && !!address && !!contract && (
-        <Card className="max-w-xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-center">
-              Score de Crédito
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center">
-              <p className="text-6xl font-bold">{score.score}</p>
-              <div className="h-2 rounded py-3">
-                <Progress
-                  value={score.score}
-                  max={1000}
-                  className="bg-gray-200"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <IconDollarSign className="w-5 h-5 text-green-500 dark:text-green-400" />
-                  <p>Histórico de Transações</p>
-                </div>
-                <p>+{score.transaction_score}</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <IconPieChart className="w-5 h-5 text-green-500 dark:text-green-400" />
-                  <p>Saldo</p>
-                </div>
-                <p>+{score.balance_score}</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <IconCreditCard className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-                  <p>Títulos</p>
-                </div>
-                <p className="text-yellow-400">+{score.options_score}</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <IconClock className="w-5 h-5 text-yellow-500 dark:text-yellow-400" />
-                  <p>Atividade</p>
-                </div>
-                <p>+{score.activity_score}</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <IconPlus className="w-5 h-5 text-purple-500 dark:text-purple-400" />
-                  <p>Investimentos em ERC20 Tokens</p>
-                </div>
-                <p>+{score.token_score}</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <IconCreditCard className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-                  <p>Adimplência</p>
-                </div>
-                <p>{score.loan_score * 100}%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {!address && (
+        <p className="text-2xl text-slate-800">
+          Conecte sua carteira e comece a usar agora mesmo!
+        </p>
       )}
+      {scoreLoadingState && <Loader />}
+      {!!score &&
+        !!address &&
+        !!contract &&
+        !isBalanceLoading &&
+        !scoreLoadingState && (
+          <Card className="max-w-xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-center">
+                Score de Crédito
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center">
+                <p className="text-6xl font-bold">{score.score}</p>
+                <div className="h-2 rounded py-3">
+                  <Progress
+                    value={score.score}
+                    max={1000}
+                    className="bg-gray-200"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <IconDollarSign className="w-5 h-5 text-green-500 dark:text-green-400" />
+                    <p>Atividade Financeira Recente (100 blocos)</p>
+                  </div>
+                  <p className="text-blue-400">{score.transaction_score}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <IconPlus className="w-5 h-5 text-purple-500 dark:text-purple-400" />
+                    <p>Títulos e Investimentos</p>
+                  </div>
+                  <p className="text-blue-400">{score.holdings_score}</p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <IconCreditCard className="w-5 h-5 text-blue-500 dark:text-blue-400" />
+                    <p>Adimplência</p>
+                  </div>
+                  <p className="text-blue-400">{score.loan_score * 100}%</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       {!!score && <Loans />}
     </>
   );

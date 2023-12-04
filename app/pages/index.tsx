@@ -73,6 +73,7 @@ export default function Home() {
             </Link>
             <Link
               href={`${process.env.NEXT_PUBLIC_API_URL}/docs`}
+              target="_blank"
               className="pl-3 text-xl hover:text-slate-500"
             >
               <p>Conheça nossa API</p>
@@ -103,26 +104,20 @@ export default function Home() {
             </div>
           </section>
         </section>
-        <WhitePaper />
       </main>
 
       <footer className="w-full py-4 px-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600">
         <div className="container mx-auto flex justify-between items-center">
           <span className="text-gray-600 dark:text-gray-300 text-sm">
-            © CreditLoans. All rights reserved.
+            © ZScore. Made with ❤️ by{" "}
+            <Link href="https://ae.studio">ae.studio</Link>
           </span>
           <nav className="space-x-4">
             <Link
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-50 text-sm"
-              href="#"
+              className="text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 text-sm"
+              href="/whitepaper"
             >
-              Terms & Conditions
-            </Link>
-            <Link
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-50 text-sm"
-              href="#"
-            >
-              Privacy Policy
+              Como funciona?
             </Link>
           </nav>
         </div>
