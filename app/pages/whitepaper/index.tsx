@@ -61,18 +61,19 @@ export default function Home() {
       >
         <section className="w-full py-12">
           <header className="flex h-20 w-full items-center px-4 md:px-6">
-            <Link href="#">
+            <Link href="/">
               <IconBank className="h-6 w-6" />
               <span className="sr-only">Score de Crédito e Empréstimo</span>
             </Link>
             <Link
               href="/whitepaper"
-              className="pl-3 text-xl hover:text-slate-500"
+              className="pl-3 text-xl hover:text-slate-500 font-bold"
             >
               <p>Como funciona?</p>
             </Link>
             <Link
               href={`${process.env.NEXT_PUBLIC_API_URL}/docs`}
+              target="_blank"
               className="pl-3 text-xl hover:text-slate-500"
             >
               <p>Conheça nossa API</p>
@@ -81,27 +82,6 @@ export default function Home() {
               <WalletBtn />
             </nav>
           </header>
-          <div className="container px-4 md:px-6 py-7">
-            <div className="flex flex-col items-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                  Bem vindo ao ZScore
-                </h1>
-                <p className="mx-auto max-w-[700px] text-gray-900 md:text-xl dark:text-gray-900">
-                  A sua melhor ferramenta web3 para análise de crédito e
-                  empréstimos
-                </p>
-              </div>
-              {/* <div className="flex justify-center">
-                <WalletBtn />
-              </div> */}
-            </div>
-          </div>
-          <section className="w-full py-12">
-            <div className="container px-4 md:px-6">
-              <Score />
-            </div>
-          </section>
         </section>
         <WhitePaper />
       </main>
