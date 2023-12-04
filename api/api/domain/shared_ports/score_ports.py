@@ -1,6 +1,6 @@
 from abc import ABCMeta
 from typing import Optional
-from api.domain.entities.score import HoldingsScore, LoanScore, Score
+from api.domain.entities.score import CompleteScore, LoanScore, Score
 
 
 class ScorePorts(metaclass=ABCMeta):
@@ -25,9 +25,9 @@ class ScorePorts(metaclass=ABCMeta):
         address: str,
         eth_balance: Optional[float] = None,
         nfts_held: Optional[int] = None,
-        account_age: Optional[int] = None,
+        account_age: Optional[float] = None,
         erc20_tokens: Optional[float] = None,
         k: int = 5,
         **kwargs,
-    ) -> HoldingsScore:
+    ) -> CompleteScore:
         raise NotImplementedError

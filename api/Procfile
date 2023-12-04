@@ -1,0 +1,1 @@
+web: uvicorn api.server.main:app --workers=4

@@ -15,6 +15,7 @@ from api.domain.use_cases.compute_loan_score.compute_loan_score_use_case import 
 from api.domain.use_cases.compute_score.compute_score_use_case import (
     ComputeScoresUseCase,
     ScoreIn,
+    ScoreOut,
 )
 from api.domain.use_cases.save_score.list_loan_transactions_use_case import (
     SaveScoreIn,
@@ -24,16 +25,6 @@ from api.domain.use_cases.save_score.list_loan_transactions_use_case import (
 from api.server.api.router import get_router
 
 router = get_router()
-
-
-@router.post("/")
-async def save_score(
-    use_case_in: SaveScoreIn,
-) -> SaveScoreOut:
-    use_case_out = await SaveScoresUseCase(adapter=SaveScoreV1UseCase()).execute(
-        use_case_in=use_case_in
-    )
-    return use_case_out
 
 
 @router.get("/loan/{address}")
@@ -50,7 +41,7 @@ async def compute_loan_score(
 @router.post("/complete")
 async def compute_loan_score(
     use_case_in: ScoreIn,
-) -> LoanScoreOut:
+) -> ScoreOut:
     use_case_out = await ComputeScoresUseCase(adapter=ComputeScoreV1UseCase()).execute(
         use_case_in=use_case_in
     )

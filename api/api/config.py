@@ -13,13 +13,14 @@ class LoggingConfig(BaseModel):
 
 
 class Settings(BaseSettings):
-    app_name: str = "Hushed Labs Bridge"
+    app_name: str = "ZScore"
     organization: str = "AE Studio"
     version: str = "0.1.0"
-    description: str = "Hushed Labs Bridge API"
+    description: str = "ZScore API - A melhor ferramenta governamental para avaliação de risco de crédito em redes descentralizadas"
     logging: LoggingConfig = LoggingConfig(
         level=os.getenv("LOGGING_LEVEL", "INFO") or "INFO",
     )
+    summary: str = "ZScore é uma ferramenta governamental para avaliação de risco de crédito. Através de uma API, o ZScore permite que o governo avalie o risco de crédito de um cidadão, com base em suas transações financeiras em redes descentralizadas."
     DATABASE_URL: str = os.getenv("DATABASE_URL") or "sqlite:///./app.db"
     ALEMBIC_DATABASE_URL: str = (
         os.getenv("DATABASE_URL").replace("postgresql+asyncpg", "postgresql")
@@ -27,6 +28,9 @@ class Settings(BaseSettings):
     )
     ALCHEMY_API_KEY: str = os.getenv("ALCHEMY_API_KEY")
     NFT_CONTRACT_ADDRESS: str = os.getenv("NFT_CONTRACT_ADDRESS")
+    ALCHEMY_ENDPOINT: str = os.getenv(
+        "ALCHEMY_ENDPOINT", "https://polygon-mumbai.g.alchemy.com/v2/"
+    )
 
 
 settings = Settings()
