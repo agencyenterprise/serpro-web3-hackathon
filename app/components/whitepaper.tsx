@@ -2,7 +2,22 @@ import { MathJax } from "better-react-mathjax";
 export default function WhitePaper() {
   return (
     <div className="container mx-auto p-4 text-left">
-      <h1 className="text-xl font-bold">
+
+<h1 className="text-xl font-bold">Visão Geral</h1>
+      <p>
+      O Zscore está inovando ao construir um sistema de financiamento descentralizado que utiliza títulos públicos tokenizados como base para o cálculo do score de empréstimos. Empregando zero knowledge proofs, o Zscore desenvolve um modelo de machine learning para calcular o score Web3 de cidadãos e empresas, considerando fatores como transações anteriores, histórico de aquisição de títulos e títulos ativos por receber.
+      </p>
+      <h1 className="text-xl font-bold pt-2">Diferencial Competitivo</h1>
+      <p>
+      O Zscore destaca-se ao utilizar zero knowledge proofs e machine learning para calcular o score Web3 do usuário, oferecendo uma abordagem avançada e segura para a concessão de empréstimos descentralizados. Além disso, a tokenização de títulos públicos como informação proporciona uma base sólida de segurança e estabilidade, diferenciando o Zscore como uma opção confiável no mercado DeFi tradicional.  O sistema incorpora dados de plataformas de empréstimos Web3, como a Aave, onde parte do score é determinada pela avaliação da chance de adimplência. Para alcançar isso, removemos as informações das últimas tentativas de empréstimos do usuário e desenvolvemos um modelo que estabelece uma relação entre o health factor, a taxa de inadimplência e a liquidação. Essa abordagem inovadora e analítica proporciona uma visão mais precisa e dinâmica da saúde financeira do usuário, fortalecendo ainda mais a confiabilidade do Zscore no ecossistema financeiro.
+      </p>
+
+      
+
+
+
+
+      <h1 className="text-xl font-bold pt-10">
         Sistema de Pontuação de Usuário Web3
       </h1>
 
