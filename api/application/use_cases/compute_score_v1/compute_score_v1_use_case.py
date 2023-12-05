@@ -11,7 +11,8 @@ from api.domain.entities.score import Score
 from tensorflow import keras
 from keras.models import load_model, Model
 import numpy as np
-
+from sqlalchemy import select
+from sqlalchemy.orm.exc import NoResultFound
 from api.domain.shared_ports.score_ports import ScorePorts
 
 model: Model = load_model(
@@ -44,10 +45,13 @@ class ComputeScoreV1UseCase(ScorePorts):
                 for transaction in transactions
             ]
         )
-        loan_score = await run_in_threadpool(
-            model.predict, input_features[np.newaxis, :]
-        )
-        loan_score = loan_score[0].tolist()[0]
+        if len(input_features):
+            loan_score = await run_in_threadpool(
+                model.predict, input_features[np.newaxis, :]
+            )
+            loan_score = loan_score[0].tolist()[0]
+        else:
+            loan_score = 0.75
         logging.info(f"Loan score: {loan_score}")
         holdings_score = await score_controller.compute_holdings_score(
             eth_balance, nfts_held, account_age, erc20_tokens
@@ -64,7 +68,18 @@ class ComputeScoreV1UseCase(ScorePorts):
             score=max((holdings_score + transaction_score) * loan_score, 100),
         )
         async with session() as db_session:
-            db_session.add(score_model)
+            # Check if a record with the given address already exists
+            stmt = select(ScoreModel).where(ScoreModel.address == address)
+            try:
+                existing_record = await db_session.execute(stmt)
+                existing_record = existing_record.scalar_one()
+                # Update existing record
+                existing_record.score = score_model.score
+            except NoResultFound:
+                # No existing record, so add a new one
+                db_session.add(score_model)
+
+            # Commit the transaction
             await db_session.commit()
         return Score(
             address=score_model.address,
