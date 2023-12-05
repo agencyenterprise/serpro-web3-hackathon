@@ -22,7 +22,7 @@ class ScoreController(DBController):
         self,
         eth_balance: float,
         nfts_held: int,
-        account_age: int,
+        account_age: float,
         erc20_tokens: float,
         **kwargs
     ) -> Score:
@@ -35,8 +35,10 @@ class ScoreController(DBController):
 
     async def compute_transaction_score(
         self, address: str, holdings_score: float, **kwargs
-    ) -> Score:
+    ) -> float:
         transactions = await extract_payment_data(address)
+        if not len(transactions):
+            return 0.0
         return await compute_transaction_based_score(
             transactions_df=transactions,
             user_score=holdings_score,

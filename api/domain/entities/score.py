@@ -22,3 +22,10 @@ class TransactionScore(ComputedScore):
 
 class HoldingsScore(ComputedScore):
     score: float
+
+
+class CompleteScore(Score):
+    score: float
+    loan_score: float
+    transaction_score: float
+    holdings_score: float

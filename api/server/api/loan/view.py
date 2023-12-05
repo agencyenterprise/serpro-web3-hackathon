@@ -14,7 +14,7 @@ router = get_router()
 
 
 @router.post("/")
-async def save_artifacts(
+async def list_loans(
     use_case_in: ListLoanTransactionIn,
 ) -> ListLoanTransactionOut:
     use_case_out = await ListLoanTransactionsUseCase(

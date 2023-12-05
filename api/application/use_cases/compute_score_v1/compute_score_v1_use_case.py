@@ -7,7 +7,7 @@ from api.application.use_cases.controllers.loan_transactions_controller import (
     LoanTransactionController,
 )
 from api.application.model.db import session
-from api.domain.entities.score import Score
+from api.domain.entities.score import CompleteScore, Score
 from tensorflow import keras
 from keras.models import load_model, Model
 import numpy as np
@@ -26,11 +26,11 @@ class ComputeScoreV1UseCase(ScorePorts):
         address: str,
         eth_balance: float,
         nfts_held: int,
-        account_age: int,
+        account_age: float,
         erc20_tokens: float,
         k: int = 5,
         **kwargs,
-    ) -> Score:
+    ) -> CompleteScore:
         loan_transaction_controller = LoanTransactionController()
         score_controller = ScoreController()
         transactions = await loan_transaction_controller.list_transactions(address, k)
@@ -65,7 +65,7 @@ class ComputeScoreV1UseCase(ScorePorts):
         )
         score_model = ScoreModel(
             address=address,
-            score=max((holdings_score + transaction_score) * loan_score, 100),
+            score=max((holdings_score + transaction_score) * loan_score, 10),
         )
         async with session() as db_session:
             # Check if a record with the given address already exists
@@ -81,9 +81,12 @@ class ComputeScoreV1UseCase(ScorePorts):
 
             # Commit the transaction
             await db_session.commit()
-        return Score(
+        return CompleteScore(
             address=score_model.address,
             score=score_model.score,
+            transaction_score=transaction_score,
+            loan_score=loan_score,
+            holdings_score=holdings_score,
             id=score_model.id,
             created_at=score_model.created_at,
             updated_at=score_model.updated_at,

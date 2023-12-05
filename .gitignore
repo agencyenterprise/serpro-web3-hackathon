@@ -20,3 +20,7 @@ p.py
 zkmodel/transaction_based_score_model.py
 zkmodel/load_data.py
 .env
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

@@ -1,7 +1,4 @@
-import json
 import logging
-from pdb import run
-import time
 from typing import Optional
 from fastapi.concurrency import run_in_threadpool
 import pandas as pd
@@ -14,11 +11,13 @@ from api.application.model.score import ScoreModel
 from api.config import settings
 import asyncio
 from api.application.model.db import session
+from web3.middleware import geth_poa_middleware
 
 # Replace with your Alchemy API key
 alchemy_api_key = settings.ALCHEMY_API_KEY
 
-w3 = Web3(Web3.HTTPProvider(f"https://eth-mainnet.alchemyapi.io/v2/{alchemy_api_key}"))
+w3 = Web3(Web3.HTTPProvider(f"{settings.ALCHEMY_ENDPOINT}{alchemy_api_key}"))
+w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
 def payment_tx_type(transaction):
@@ -122,7 +121,7 @@ def compute_overall_score(
     address: str,
     eth_balance: float,
     nfts_held: int,
-    account_age: int,
+    account_age: float,
     erc20_tokens: int,
     transactions_df: pd.DataFrame,
 ):
@@ -138,25 +137,6 @@ def compute_overall_score(
     final_score = holdings_score + transaction_score
     asyncio.run(save_score_in_db(address, final_score))
     return final_score
-
-
-# def count_nfts():
-#     try:
-#         # Load the ABI of the NFT contract
-#         with open("NFTContractABI.json", "r") as abi_file:
-#             nft_contract_abi = json.load(abi_file)
-
-#         # Create a contract instance
-#         nft_contract = w3.eth.contract(
-#             address=settings.NFT_CONTRACT_ADDRESS, abi=nft_contract_abi
-#         )
-
-#         # Call the balanceOf function to count NFTs owned by the user
-#         nft_count = nft_contract.functions.balanceOf(user_address).call()
-
-#         print(f"Number of NFTs owned by {user_address}: {nft_count}")
-#     except Exception as e:
-#         print(f"Error counting NFTs: {e}")
 
 
 def getTransactions(start, end, address):
@@ -176,6 +156,7 @@ def getTransactions(start, end, address):
         block = w3.eth.get_block(x, full_transactions=True)
         for transaction in block.transactions:
             if transaction["to"] == address or transaction["from"] == address:
+                print(transaction)
                 other_address = (
                     transaction["to"]
                     if transaction["from"] == address
@@ -262,6 +243,7 @@ async def extract_payment_data(user_address):
             other_address_scores.append(other_address_score)
         transactions["other_address_score"] = other_address_scores
         transactions["timestamp"] = pd.to_datetime(transactions["timestamp"])
+
         return transactions
     except Exception as e:
         print(f"Error fetching transactions: {e}")
