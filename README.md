@@ -53,3 +53,43 @@ This LSTM (Long Short-Term Memory) model is specifically designed to predict the
 
 - The model aids in assessing the liquidation risk of loans on DeFi platforms.
 - It provides insights for both lenders and borrowers, enabling informed decision-making and risk management in the dynamic DeFi ecosystem.
+
+## HOW TO RUN THE PROJECT:
+
+1. Build docker image with:
+
+```sh
+docker build -t serpro-web3 .
+```
+
+2. Run the server image with:
+
+```sh
+docker run -p 8000:80 -it serpro-web3
+```
+
+3. Install the packages on the frontend with:
+
+```sh
+npm install
+```
+
+4. Run the local frontend with:
+
+```sh
+npm run dev
+```
+
+NOTES:
+
+To run the project you will need a postgres instance as well an alchemy sdk api key
+
+use the following env as starting point:
+
+```
+DATABASE_URL=
+# the next env is optional and you should use to run the project migrations
+ALEMBIC_DATABASE_URL=
+ALCHEMY_API_KEY=
+NFT_CONTRACT_ADDRESS=0x0d4c5f4c0b5dabf5f0e2c6dcbf0b4c0b91d0d1f4
+```
