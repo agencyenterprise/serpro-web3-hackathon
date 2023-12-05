@@ -15,4 +15,4 @@ COPY pyproject.toml poetry.lock /app/
 RUN poetry install --no-root
 
 COPY . /app
-CMD python application.py
+CMD uvicorn api.server.main:app --port 80 --host 0.0.0.0 
